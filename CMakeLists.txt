@@ -1,4 +1,12 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.18)
+
+if (CMAKE_HOST_APPLE)
+  # Must be set before project() to produce a universal (Intel + Apple
+  # Silicon) binary. macOS 11.0 is the oldest release that runs on arm64.
+  set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build architectures for macOS" FORCE)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment version" FORCE)
+endif()
+
 project(hayaemon_qt)
 
 set(default_build_type "Release")
@@ -10,18 +18,29 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
-find_package(Qt5Widgets)
-find_package(Qt5Multimedia)
+if (WIN32)
+  # Windows build stays on Qt5 (unchanged).
+  set(QT_MAJOR_VERSION 5)
+  find_package(Qt5Widgets)
+  find_package(Qt5Multimedia)
 
-if (Qt5Widgets_FOUND)
-  if (Qt5Widgets_VERSION VERSION_LESS 5.6.3)
-    message(FATAL_ERROR "Minimum supported Qt5 version is 5.6.3!")
+  if (Qt5Widgets_FOUND)
+    if (Qt5Widgets_VERSION VERSION_LESS 5.6.3)
+      message(FATAL_ERROR "Minimum supported Qt5 version is 5.6.3!")
+    else ()
+      message("Qt5 version ${Qt5Widgets_VERSION}")
+    endif ()
   else ()
-    message("Qt5 version ${Qt5Widgets_VERSION}")
-  endif ()
-else ()
-  message(SEND_ERROR "The Qt5Widgets library could not be found!")
-endif (Qt5Widgets_FOUND)
+    message(SEND_ERROR "The Qt5Widgets library could not be found!")
+  endif (Qt5Widgets_FOUND)
+elseif (APPLE)
+  # macOS build uses Qt6, whose official binaries are universal
+  # (arm64 + x86_64) for macOS; Qt5's official macOS binaries are not.
+  set(QT_MAJOR_VERSION 6)
+  find_package(Qt6Widgets REQUIRED)
+  find_package(Qt6Multimedia REQUIRED)
+  message("Qt6 version ${Qt6Widgets_VERSION}")
+endif ()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -170,7 +189,13 @@ elseif (APPLE)
   set(BASS_DIR ${THIRDPARTY_DIR}/bass/macOS)
   set(BASSLIB_DIR ${BASS_DIR}/lib)
 endif()
-set(TAGLIB_DIR ${THIRDPARTY_DIR}/taglib-1.11.1)
+if (WIN32)
+  set(TAGLIB_DIR ${THIRDPARTY_DIR}/taglib-1.11.1)
+elseif (APPLE)
+  # macOS uses a separately-built universal (arm64 + x86_64) TagLib 1.13.1,
+  # since the bundled 1.11.1 static library is x86_64-only.
+  set(TAGLIB_DIR ${THIRDPARTY_DIR}/taglib-1.13.1)
+endif()
 
 if (WIN32)
   set(SRC_BASS
@@ -208,18 +233,20 @@ source_group("" FILES
   ${SRC_DIR}/App.h
 )
 
-set(CMAKE_CXX_STANDARD 14)
 add_definitions(-D_UNICODE -DUNICODE -DTAGLIB_STATIC)
 if (WIN32)
+  set(CMAKE_CXX_STANDARD 14)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 elseif (APPLE)
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3  -mmacosx-version-min=10.9")
-  set(CMAKE_EXE_LINKER_FLAGS "-O3 -mmacosx-version-min=10.9")
+  # Qt6 requires C++17. Deployment target/architectures are set via
+  # CMAKE_OSX_DEPLOYMENT_TARGET/CMAKE_OSX_ARCHITECTURES above.
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 endif()
 
-qt5_add_resources(RESOURCES ${SRC_DIR}/Hayaemon.qrc)
-qt5_wrap_ui(UI_MOC
+cmake_language(CALL "qt${QT_MAJOR_VERSION}_add_resources" RESOURCES ${SRC_DIR}/Hayaemon.qrc)
+cmake_language(CALL "qt${QT_MAJOR_VERSION}_wrap_ui" UI_MOC
   ${SRC_DIR}/CountLoopWnd/CountLoopWnd.ui
   ${SRC_DIR}/IncSpeedWnd/IncSpeedWnd.ui
   ${SRC_DIR}/LimitSettingWnd/LimitSettingWnd.ui
@@ -320,7 +347,11 @@ elseif (APPLE)
                          ${SRC_DIR}/Info.plist.in)
 endif ()
 
-qt5_use_modules(Hayaemon Widgets Multimedia)
+if (WIN32)
+  target_link_libraries(Hayaemon Qt5::Widgets Qt5::Multimedia)
+elseif (APPLE)
+  target_link_libraries(Hayaemon Qt6::Widgets Qt6::Multimedia)
+endif ()
 
 if (WIN32)
   file(GLOB_RECURSE BASSLIB_FILES ${BASSLIB_DIR}/*.dll)

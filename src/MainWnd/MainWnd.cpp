@@ -17,7 +17,8 @@
 #include <QGuiApplication>
 #include <QMessageBox>
 #include <QMimeData>
-#include <QSound>
+#include <QSoundEffect>
+#include <QUrl>
 #include <QThread>
 #include <QTimer>
 #include "../App.h"
@@ -8323,7 +8324,8 @@ LRESULT CMainWnd::OnCreate()
 	SetPreviousNextMenuState();
 
 	QString strClick = m_rApp.GetFilePath() + "click.wav";
-	lpSound = new QSound(strClick, this);
+	lpSound = new QSoundEffect(this);
+	lpSound->setSource(QUrl::fromLocalFile(strClick));
 
 	m_timeThreadRunning = true;
 	m_timeThread.reset(

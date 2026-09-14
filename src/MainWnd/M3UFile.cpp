@@ -69,7 +69,12 @@ void CM3UFile::Save(const PCTSTR & pFilePath, tstring str, BOOL bUtf8)
 	if(!file.open(QIODevice::WriteOnly)) return;
 
 	QTextStream out(&file);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+	// Qt6's QTextStream always uses UTF-8 (setCodec was removed); on Qt5
+	// the default stream codec is locale-dependent, so it must be forced
+	// to UTF-8 explicitly for the .m3u8 case.
 	if(bUtf8) out.setCodec("UTF-8");
+#endif
 
 	out << ToQString(str);
 }

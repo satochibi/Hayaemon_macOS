@@ -1,8 +1,13 @@
 #!/bin/bash
 cd $(dirname $0)
-/Applications/CMake.app/Contents/bin/cmake ./ -DCMAKE_PREFIX_PATH=/Applications/Qt/5.13.0/clang_64
+QT_DIR="$HOME/Qt/6.12.0/macos"
+cmake ./ -DCMAKE_PREFIX_PATH="$QT_DIR"
 make
-/Applications/Qt/5.13.0/clang_64/bin/macdeployqt Hayaemon.app
+"$QT_DIR/bin/macdeployqt" Hayaemon.app
+# Apple Silicon (and current Gatekeeper policy in general) refuses to run
+# any binary with no code signature at all, so ad-hoc sign everything
+# macdeployqt just bundled in.
+codesign --force --deep --sign - Hayaemon.app
 rm *.h
 rm *.cpp
 rm cmake_install.cmake

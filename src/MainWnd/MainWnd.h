@@ -23,7 +23,7 @@ class CTimeSlider_MainWnd;
 class CToolBar_MainWnd;
 class CVolumeLabel_MainWnd;
 class CVolumeSlider_MainWnd;
-class QSound;
+class QSoundEffect;
 class QTimer;
 class QUrl;
 #include <memory>
@@ -392,7 +392,7 @@ protected: // メンバ変数
 						   // 1 : 時間ごと, 2 : ループごと
 	int nCurPlayTab; // 現在再生中のファイルが存在しているタブ
 	DWORD dwLastTime; // 前回の時間（メトロノーム用）
-	QSound * lpSound; // 音（メトロノーム用）
+	QSoundEffect * lpSound; // 音（メトロノーム用）
 	int m_nBpm; // テンポ（メトロノーム用）
 	int m_nInterval; // 間隔（メトロノーム用）
 	DWORD dwFadeoutStartTime; // フェードアウト開始時間

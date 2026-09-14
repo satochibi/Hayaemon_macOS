@@ -1676,7 +1676,8 @@ BOOL CSound::StreamCreateFile(LPCTSTR lpFilePath, BOOL bDecode, int nCount)
 	auto pos = filePath.rfind('.');
 	if(pos != tstring::npos) {
 		ext = filePath.substr(pos);
-		std::transform(ext.begin(), ext.end(), ext.begin(), std::tolower);
+		std::transform(ext.begin(), ext.end(), ext.begin(),
+				[](TCHAR c) { return std::tolower(c); });
 	}
 
 	if(ext == _T(".nsf"))

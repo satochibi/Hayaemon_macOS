@@ -7,7 +7,6 @@
 #include <QDesktopServices>
 #include <QEventLoop>
 #include <QMessageBox>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QUrl>
@@ -2865,12 +2864,6 @@ void CMenu_MainWnd::OnManualMenuSelected()
 //----------------------------------------------------------------------------
 void CMenu_MainWnd::OnUpdateCheckMenuSelected()
 {
-	QNetworkAccessManager manager;
-	if (manager.networkAccessible() == QNetworkAccessManager::NotAccessible) {
-		QMessageBox::warning(&m_rMainWnd, tr("Offline"),
-				tr("Failed to connect to the Internet."));
-		return;
-	}
 	QString strVersion = m_rApp.GetVersionInfo();
 	strVersion.replace(".", "");
 	int nPos = strVersion.indexOf(u8"β", 0);
@@ -2891,14 +2884,17 @@ void CMenu_MainWnd::OnUpdateCheckMenuSelected()
 	QUrl url("http://hayaemon.jp/" + strFileName);
 	QTcpSocket socket;
 	socket.connectToHost(url.host(), 80);
-	if (socket.waitForConnected()) {
-		socket.write("HEAD " + url.path().toUtf8() + " HTTP/1.1\r\n"
-					 "Host: " + url.host().toUtf8() + "\r\n\r\n");
-		if (socket.waitForReadyRead()) {
-			QByteArray bytes = socket.readAll();
-			if (bytes.contains("200 OK")) {
-				bFileExist = TRUE;
-			}
+	if (!socket.waitForConnected()) {
+		QMessageBox::warning(&m_rMainWnd, tr("Offline"),
+				tr("Failed to connect to the Internet."));
+		return;
+	}
+	socket.write("HEAD " + url.path().toUtf8() + " HTTP/1.1\r\n"
+				 "Host: " + url.host().toUtf8() + "\r\n\r\n");
+	if (socket.waitForReadyRead()) {
+		QByteArray bytes = socket.readAll();
+		if (bytes.contains("200 OK")) {
+			bFileExist = TRUE;
 		}
 	}
 
