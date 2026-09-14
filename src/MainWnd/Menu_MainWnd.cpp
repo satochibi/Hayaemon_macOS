@@ -2849,15 +2849,8 @@ void CMenu_MainWnd::OnPreferencesMenuSelected()
 //----------------------------------------------------------------------------
 void CMenu_MainWnd::OnManualMenuSelected()
 {
-	QString lang = QLocale().name();
-	lang.truncate(lang.lastIndexOf('_'));
-	if (lang == "ja") {
-		QDesktopServices::openUrl(
-			QUrl("http://soft.edolfzoku.com/hayaemon2/manual.html"));
-	} else {
-		QString manualPath = m_rApp.GetFilePath() + "manual\\index.html";
-		QDesktopServices::openUrl("file:///" + manualPath);
-	}
+	QDesktopServices::openUrl(
+		QUrl("http://soft.edolfzoku.com/hayaemon2/manual.html"));
 }
 //----------------------------------------------------------------------------
 // ヘルプ → アップデートの確認メニューが選択された
