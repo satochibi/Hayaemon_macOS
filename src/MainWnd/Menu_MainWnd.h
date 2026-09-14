@@ -69,6 +69,7 @@ public: // 関数
 	void OnSaveAllFileMenuSelected();
 	void OnLAMECommandLineMenuSelected();
 	void OnExitMenuSelected();
+	void OnLanguageMenuSelected();
 	void OnDeleteMenuSelected();
 	void OnSelectAllMenuSelected();
 	void OnTimeSliderMenuSelected(bool checked);

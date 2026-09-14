@@ -335,6 +335,18 @@ Hayaemon.exeと同じディレクトリにoggenc2.exeを置いて下さい。</t
 <context>
     <name>CMenu_MainWnd</name>
     <message>
+        <location filename="MainWnd/Menu_MainWnd.cpp" line="421"/>
+        <source>Question</source>
+        <translation>確認</translation>
+    </message>
+    <message>
+        <location filename="MainWnd/Menu_MainWnd.cpp" line="422"/>
+        <source>The language setting will take effect after restarting the application.
+Do you want to restart now?</source>
+        <translation>言語設定の変更を反映するには、アプリケーションの再起動が必要です。
+今すぐ再起動しますか？</translation>
+    </message>
+    <message>
         <location filename="MainWnd/Menu_MainWnd.cpp" line="2870"/>
         <source>Offline</source>
         <translation>オフライン</translation>

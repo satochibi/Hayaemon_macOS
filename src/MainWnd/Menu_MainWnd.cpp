@@ -6,9 +6,11 @@
 #include <QActionGroup>
 #include <QDesktopServices>
 #include <QEventLoop>
+#include <QCoreApplication>
 #include <QMessageBox>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QProcess>
 #include <QUrl>
 #include "../App.h"
 #include "../Common/CommandList.h"
@@ -21,6 +23,7 @@
 #include "PitchLabel_MainWnd.h"
 #include "PitchSlider_MainWnd.h"
 #include "PlayListView_MainWnd.h"
+#include "Platform.h"
 #include "Sound.h"
 #include "SpeedLabel_MainWnd.h"
 #include "SpeedSlider_MainWnd.h"
@@ -399,6 +402,30 @@ void CMenu_MainWnd::OnLAMECommandLineMenuSelected()
 void CMenu_MainWnd::OnExitMenuSelected()
 {
 	m_rMainWnd.close();
+}
+//----------------------------------------------------------------------------
+// System → Language メニューが選択された
+//----------------------------------------------------------------------------
+void CMenu_MainWnd::OnLanguageMenuSelected()
+{
+	TCHAR lang[8] = {0};
+	if (m_rMainWnd.actionLanguageJapanese->isChecked()) {
+		lstrcpy(lang, _T("ja"));
+	} else if (m_rMainWnd.actionLanguageEnglish->isChecked()) {
+		lstrcpy(lang, _T("en"));
+	}
+	tstring initFilePath = m_rApp.GetSettingFilePath();
+	WritePrivateProfileString(_T("Options"), _T("Language"), lang,
+		initFilePath.c_str());
+
+	int nButton = QMessageBox::question(nullptr, tr("Question"),
+		tr("The language setting will take effect after restarting the "
+			 "application.\n"
+			 "Do you want to restart now?"));
+	if (nButton == QMessageBox::Yes) {
+		QProcess::startDetached(QCoreApplication::applicationFilePath());
+		m_rMainWnd.close();
+	}
 }
 //----------------------------------------------------------------------------
 // 削除メニューが選択された
@@ -3243,6 +3270,13 @@ void CMenu_MainWnd::CreateConnections()
 					this, &CMenu_MainWnd::OnLAMECommandLineMenuSelected);
 	connect(m_rMainWnd.actionFileExit, &QAction::triggered,
 					this, &CMenu_MainWnd::OnExitMenuSelected);
+	// System - Language
+	connect(m_rMainWnd.actionLanguageDefault, &QAction::triggered,
+					this, &CMenu_MainWnd::OnLanguageMenuSelected);
+	connect(m_rMainWnd.actionLanguageJapanese, &QAction::triggered,
+					this, &CMenu_MainWnd::OnLanguageMenuSelected);
+	connect(m_rMainWnd.actionLanguageEnglish, &QAction::triggered,
+					this, &CMenu_MainWnd::OnLanguageMenuSelected);
 	// Edit
 	connect(m_rMainWnd.actionEditDelete, &QAction::triggered,
 					this, &CMenu_MainWnd::OnDeleteMenuSelected);
